@@ -1,5 +1,5 @@
 ########################################################################################
-# $Id: 45_Energymanager 1202 2017-03-31 11:00:00Z                                    $ #
+# $Id: 45_Energymanager 1202 2017-06-27 11:00:00Z                                    $ #
 # Modul um den Energiehaushalt zu managen                                              #
 #                                                                                      #
 # Martin Schottmann, 2017                                                              #
@@ -47,19 +47,19 @@ my %gets = (
 sub Energymanager_Initialize($) {
   my ($hash) = @_;
   my $name = $hash->{NAME};
-  Log3 "global",4,"ROLLO_Automatik (?) >> Initialize";
+  Log3 "global",4,"ENERGYMANAGER (?) >> Initialize";
 
-  $hash->{DefFn}    = "ROLLO_Automatik_Define";
-  $hash->{UndefFn}  = "ROLLO_Automatik_Undef";
-  $hash->{SetFn}    = "ROLLO_Automatik_Set";
-  $hash->{GetFn}    = "ROLLO_Automatik_Get";
-  $hash->{AttrFn}   = "ROLLO_Automatik_Attr";
+  $hash->{DefFn}    = "ENERGYMANAGER_Define";
+  $hash->{UndefFn}  = "ENERGYMANAGER_Undef";
+  $hash->{SetFn}    = "ENERGYMANAGER_Set";
+  $hash->{GetFn}    = "ENERGYMANAGER_Get";
+  $hash->{AttrFn}   = "ENERGYMANAGER_Attr";
   $hash->{AttrList} = " Uhrzeit"
-    . " Rolladen-positionen"
+    . " Verbraucher-schalten"
 #   . " automatic-modus:on,off"
     . " Tage-aktiv"
     . " Bedingung";
-  Log3 "global",4,"ROLLO_Automatik (?) << Initialize";
+  Log3 "global",4,"ENERGYMANAGER (?) << Initialize";
 }
 
 ################################################################ DEFINE #####
@@ -69,7 +69,7 @@ sub Energymanager_Initialize($) {
 sub Energymanager_Define($$) {
   my ($hash,$def) = @_;
   my $name = $hash->{NAME};
-  Log3 $name,5,"ROLLO_Automatik ($name) >> Define";
+  Log3 $name,5,"ENERGYMANAGER ($name) >> Define";
   
   my @a = split( "[ \t][ \t]*", $def );
 
@@ -77,25 +77,25 @@ sub Energymanager_Define($$) {
   $hash->{STATE} = "ein";
 
   #Als Vorgabe einige Attribute definieren, das macht weniger Arbeit als sie
-  #bei jedem ROLLO_Automatik komplett neu zu erfassen
-  $attr{$name}{"Uhrzeit"} = "10:00";
-  $attr{$name}{"Rolladen-positionen"} = "wohn.rollo,schlaf.rollo:offen wohn.tuer.rollo:geschlossen";
-  $attr{$name}{"Tage-aktiv"} = "Montag,Dienstag,Mittwoch";
+  #bei jedem ENERGYMANAGER komplett neu zu erfassen
+  $attr{$name}{"Uhrzeit"} = "0:00";
+  $attr{$name}{"Verbraucher-schalten"} = "EG_WZ_PHASE_PARTY:off,EG_WZ_PHASE_DAUER:off,EG_WZ_PHASE_KOMFORT:off";
+  $attr{$name}{"Tage-aktiv"} = "Montag,Dienstag,Mittwoch,Donerstag,Freitag";
   $attr{$name}{"devStateIcon"} = 'ein:general_an@green:aus aus:general_aus:ein';
   $attr{$name}{"webCmd"} = "Aktivieren";
-  $attr{$name}{"room"} = "Rolladen";
+  $attr{$name}{"room"} = "Energie";
   $attr{$name}{"group"} = "Automatik";
 
-  if (Value("at_ROLLO_Automatik_$name") eq "") {
-    fhem("define at_ROLLO_Automatik_$name at *10:00:00 set $name Prüfen")
+  if (Value("at_ENERGYMANAGER_$name") eq "") {
+    fhem("define at_ENERGYMANAGER_$name at *0:00:00 set $name Prüfen")
   }
-  my $at_raum = AttrVal("at_ROLLO_Automatik_$name",'room',undef);
+  my $at_raum = AttrVal("at_ENERGYMANAGER_$name",'room',undef);
   if (undef $at_raum) {
-    fhem("attr at_ROLLO_Automatik_$name room Rolladen");
-    fhem("attr at_ROLLO_Automatik_$name group check");
+    fhem("attr at_ENERGYMANAGER_$name room Rolladen");
+    fhem("attr at_ENERGYMANAGER_$name group check");
   }
 
-  Log3 $name,5,"ROLLO_Automatik ($name) << Define";
+  Log3 $name,5,"ENERGYMANAGER ($name) << Define";
 }
 
 ################################################################# UNDEF #####
@@ -105,21 +105,21 @@ sub Energymanager_Define($$) {
 sub Energymanager_Undef($) {
   my ($hash) = @_;
   my $name = $hash->{NAME};
-  Log3 $name,5,"ROLLO_Automatik ($name) >> Undef";
+  Log3 $name,5,"ENERGYMANAGER ($name) >> Undef";
 #  RemoveInternalTimer($hash);
-  Log3 $name,5,"ROLLO_Automatik ($name) << Undef";
+  Log3 $name,5,"ENERGYMANAGER ($name) << Undef";
 }
 
 #################################################################### SET #####
 sub Energymanager_Set($@) {
   my ($hash,@a) = @_;
   my $name = $hash->{NAME};
-  Log3 $name,5,"ROLLO_Automatik ($name) >> Set";
+  Log3 $name,5,"ENERGYMANAGER ($name) >> Set";
  
   #FEHLERHAFTE PARAMETER ABFRAGEN
   if ( @a < 2 ) {
-    Log3 $name,3,"\"set ROLLO\" needs at least an argument << Set";
-    return "\"set ROLLO\" needs at least an argument";
+    Log3 $name,3,"\"set ENERGY\" needs at least an argument << Set";
+    return "\"set ENERGY\" needs at least an argument";
   }
   #my $name = shift @a;
   my $opt =  $a[1]; #shift @a;
@@ -136,7 +136,7 @@ sub Energymanager_Set($@) {
     if ($opt ne "?") {
       Log3 $name,3,"Unknown argument $opt, choose one of $param";
     }
-    Log3 $name,5,"ROLLO_Automatik ($name) << Set";
+    Log3 $name,5,"ENERGYMANAGER ($name) << Set";
     return "Unknown argument $opt, choose one of $param";
   }
 
@@ -161,22 +161,22 @@ sub Energymanager_Set($@) {
   my $attrZeit = AttrVal($name,'Uhrzeit',undef);
   setzeStartTimer($name,$attrZeit);
 
-  Log3 $name,5,"ROLLO_Automatik ($name) << Set";
+  Log3 $name,5,"ENERGYMANAGER ($name) << Set";
 }
 #*****************************************************************
 # diese prüfung wird täglich zur vorgegebenen Szenario-Uhrzeit durchgeführt. 
 # Es wird geprüft ob alle Voraussetzungen des Szenario erfüllt werden.
-# wenn ja wird das Szenario aktiviert und die Rollos in die entsprechende
+# wenn ja wird das Szenario aktiviert und die ENERGYs in die entsprechende
 # Position gefahren.
 # Es wird der Timer auf den nächsten Tag zum prüfen gesetzt.
 sub checkAktivity($) {
   my ($hash) = @_;
   my $name = $hash->{NAME};
-  Log3 $name,5,"ROLLO_Automatik ($name) >> checkAktivity";
+  Log3 $name,5,"ENERGYMANAGER ($name) >> checkAktivity";
 
   #***** Automatik-Modus aus *****#
   if ($hash->{STATE} eq "aus") {
-    Log3 $name,5,"ROLLO_Automatik ($name) << checkAktivity (ist deaktiviert)";
+    Log3 $name,5,"ENERGYMANAGER ($name) << checkAktivity (ist deaktiviert)";
     return;
   }
   #***** Wochentag in Liste *****#
@@ -195,22 +195,22 @@ sub checkAktivity($) {
   }
   my $wochentage = AttrVal($name,'Tage-aktiv',undef);
   if (!defined $wochentage) {
-    Log3 $name,4,"ROLLO_Automatik ($name) Attribut Tage-aktiv nicht definiert << checkAktivity";
+    Log3 $name,4,"ENERGYMANAGER ($name) Attribut Tage-aktiv nicht definiert << checkAktivity";
     return;
   }
   if (index($wochentage, $heute) == -1) {
-    Log3 $name,4,"ROLLO_Automatik ($name) << checkAktivity ($heute nicht enthalten in $wochentage)";
+    Log3 $name,4,"ENERGYMANAGER ($name) << checkAktivity ($heute nicht enthalten in $wochentage)";
     return;
   }
   #***** Pennen aktiv? ****#
-  my $pennen = Value('Pennen');
+  my $party = Value('Party');
   my ($Sekunden, $Minuten, $Stunden, $Monatstag, $Monat,$Jahr, $Wochentag, $Jahrestag, $Sommerzeit) = localtime(time);
   
-  if ($pennen eq "ja") {
-    Log3 $name,5,"Pennen aktiv";
-    my $vor10 = UhrzeitVergleich("$Stunden:$Minuten:$Sekunden","10:00:00");
+  if ($party eq "ja") {
+    Log3 $name,5,"Partymodus aktiv";
+    my $vor10 = UhrzeitVergleich("$Stunden:$Minuten:$Sekunden","0:00:00");
     if ($vor10 == -1) {
-      Log3 $name,4,"Szenario schaltet vor 10, aber 'Pennen' ist aktiv -> Szenario nicht starten";
+      Log3 $name,4,"Szenario schaltet vor 0 Uhr, aber 'Partymodus' ist aktiv -> Szenario nicht starten";
       return;
     }
   }
@@ -242,48 +242,48 @@ sub checkAktivity($) {
   #wenn alle Prüfungen ok sind, wird gestartet
   starteSzenario($hash);
 
-  Log3 $name,5,"ROLLO_Automatik ($name) << checkAktivity";
+  Log3 $name,5,"ENERGYMANAGER ($name) << checkAktivity";
 }
 
 #********************************************************
 # Das Szenario wird ohne weitere Prüfung aktiviert und die
-# Rollos entsprechend eingestellt, wird unter anderem von
+# ENERGYs entsprechend eingestellt, wird unter anderem von
 # checkAktivity() bei Erfolg aufgerufen
 sub starteSzenario($) {
   my ($hash) = @_;
   my $name = $hash->{NAME};
-  Log3 $name,5,"ROLLO_Automatik ($name) >> starteSzenario";
+  Log3 $name,5,"ENERGYMANAGER ($name) >> starteSzenario";
 
   #Event auslösen, bedeutet Last auf dem System, aber so kann
   #ich das gerade aktive Event in einem dummy speichern und
   #anzeigen. Der Name des Readings sollte unverwechselbar sein
-  readingsSingleUpdate($hash, 'ROLLO_Automatik_aktiviert','ja',1);
+  readingsSingleUpdate($hash, 'ENERGYMANAGER_aktiviert','ja',1);
 
   my $aVal = AttrVal($name,'Rolladen-positionen',undef);
   if (!defined $aVal) {
       return "Attribut Rolladen-positionen ist nicht definiert!";
   }
-  my @listen = split( "#", $aVal ); #@listen = wohn.rollo,schlaf.rollo:geschlossen ess.rollo:schlitz wohn.tuer.rollo:offen
-  foreach my $gruppe (@listen) {              #$gruppe = wohn.rollo,schlaf.rollo:geschlossen
-    my @array = split(":",$gruppe);           #@array = [1] wohn.rollo,schlaf.rollo [2] geschlossen
-    my @rollos = split(",",$array[0]);        #@rollos = [1] wohn.rollo [2] schlaf.rollo
-    foreach my $rollo (@rollos) {             #$rollo = wohn.rollo
-      # Rollo Eigenschaften prüfen und anwenden
-      my $r_enabled = AttrVal($rollo,'automatic-enabled','on');
+  my @listen = split( "#", $aVal ); #@listen = wohn.ENERGY,schlaf.ENERGY:geschlossen ess.ENERGY:schlitz wohn.tuer.ENERGY:offen
+  foreach my $gruppe (@listen) {              #$gruppe = wohn.ENERGY,schlaf.ENERGY:geschlossen
+    my @array = split(":",$gruppe);           #@array = [1] wohn.ENERGY,schlaf.ENERGY [2] geschlossen
+    my @ENERGYs = split(",",$array[0]);        #@ENERGYs = [1] wohn.ENERGY [2] schlaf.ENERGY
+    foreach my $ENERGY (@ENERGYs) {             #$ENERGY = wohn.ENERGY
+      # ENERGY Eigenschaften prüfen und anwenden
+      my $r_enabled = AttrVal($ENERGY,'automatic-enabled','on');
       if ($r_enabled eq "off") {
         next;
       }
-      my $r_delay = AttrVal($rollo,'automatic-delay','0');
-      my $befehl = "set $rollo $array[1]";
+      my $r_delay = AttrVal($ENERGY,'automatic-delay','0');
+      my $befehl = "set $ENERGY $array[1]";
       if ($r_delay ne "0") {
 	#verzögert ausführen
-	$befehl = "define at_".$rollo."_delay at +00:". sprintf('%02d',$r_delay) .":00 " . $befehl;
+	$befehl = "define at_".$ENERGY."_delay at +00:". sprintf('%02d',$r_delay) .":00 " . $befehl;
       }
       fhem($befehl);
       Log3 $name,5,$befehl;
     }
   }
-  Log3 $name,5,"ROLLO_Automatik ($name) << starteSzenario";
+  Log3 $name,5,"ENERGYMANAGER ($name) << starteSzenario";
 }
 
 #******************* Hilfsfunktion
@@ -320,19 +320,19 @@ sub UhrzeitVergleich($$)
 sub getUhrzeit($$)
 {
   my ($name,$val) = @_;
-  Log3 $name,5,"ROLLO_Automatik ($name) >> getUhrzeit";
+  Log3 $name,5,"ENERGYMANAGER ($name) >> getUhrzeit";
 
   if ($val =~ /^(\d|[01]\d|2[0-3]):[0-5]\d$/) {
-    Log3 $name,5,"ROLLO_Automatik ($name) << getUhrzeit return $val:00 [1]";
+    Log3 $name,5,"ENERGYMANAGER ($name) << getUhrzeit return $val:00 [1]";
     return "$val:00";
   }
   my $zeit = Value($val);
   if ($zeit =~ /^(\d|[01]\d|2[0-3]):[0-5]\d:[0-5]\d$/) {
-    Log3 $name,5,"ROLLO_Automatik ($name) << getUhrzeit return $zeit [2]";
+    Log3 $name,5,"ENERGYMANAGER ($name) << getUhrzeit return $zeit [2]";
     return $zeit;
   } 
 
-  Log3 $name,5,"ROLLO_Automatik ($name) << getUhrzeit return 10:00:00 (unbekannt) [3]";
+  Log3 $name,5,"ENERGYMANAGER ($name) << getUhrzeit return 10:00:00 (unbekannt) [3]";
   return "10:00:00";
 }
 
@@ -343,7 +343,7 @@ sub Energymanager_Get($@) {
   my $name = $hash->{NAME};
 
   if ( @a < 2 ) {
-    return "\"get ROLLO\" needs at least one argument";
+    return "\"get ENERGY\" needs at least one argument";
   }
 
   #existiert die abzufragende Eigenschaft in der Liste %gets (Am Anfang)
@@ -360,7 +360,7 @@ sub Energymanager_Get($@) {
 #
 sub Energymanager_Attr(@) {
   my ($cmd,$name,$aName,$aVal) = @_;
-  Log3 $name,5,"ROLLO_Automatik ($name) >> Attr";  
+  Log3 $name,5,"ENERGYMANAGER ($name) >> Attr";  
   # $cmd can be "del" or "set"
   # aName and aVal are Attribute name and value
   if ($cmd eq "set") {
@@ -368,7 +368,7 @@ sub Energymanager_Attr(@) {
     if ($aName eq "Regex") {
       eval { qr/$aVal/ };
       if ($@) {
-        Log3 $name, 3, "ROLLO: Invalid regex in attr $name $aName $aVal: $@";
+        Log3 $name, 3, "ENERGY: Invalid regex in attr $name $aName $aVal: $@";
 	return "Invalid Regex $aVal";
       }
 
@@ -378,17 +378,17 @@ sub Energymanager_Attr(@) {
       setzeStartTimer($name,$aVal);
     }
   }
-  Log3 $name,5,"ROLLO_Automatik ($name) << Attr";
+  Log3 $name,5,"ENERGYMANAGER ($name) << Attr";
   return undef;
 }
 #************************************** Hilfsfunktion
 # setzt einen Timer für den nächsten Start
 sub setzeStartTimer($$) {
   my ($name,$aVal) = @_;
-  Log3 $name,5,"ROLLO_Automatik ($name) >> setzeStartTimer";
+  Log3 $name,5,"ENERGYMANAGER ($name) >> setzeStartTimer";
 
   my $zeit = getUhrzeit($name,$aVal);
-  my $at_name = "at_ROLLO_Automatik_" . $name;
+  my $at_name = "at_ENERGYMANAGER_" . $name;
   my $befehl = "modify " . $at_name . " *" . $zeit;
   fhem($befehl);
 
@@ -400,55 +400,55 @@ sub setzeStartTimer($$) {
 =pod
 =begin html
 
-<a name="ROLLO_Automatik"></a>
-<h3>ROLLO</h3>
+<a name="ENERGYMANAGER"></a>
+<h3>ENERGY</h3>
 <ul>
-<p>The module ROLLO_Automatik offers easy away to make simple automatism to your Home.<br> 
+<p>The module ENERGYMANAGER offers easy away to make simple automatism to your Home.<br> 
 		You can define multiple Szenarios and set a starttime. One Szenario is active every time.
     It is still under construction, there are some hardcoded dependencies and the Attributes 
     and set commands are still in german language.
     <h4>Example</h4>
 			<p>
-				<code>define szenario.day.work ROLLO_Automatik</code>
+				<code>define szenario.day.work ENERGYMANAGER</code>
 				<br />
-			</p><a name="ROLLO_automatik_Define"></a>
+			</p><a name="ENERGYMANAGER_Define"></a>
 			<h4>Define</h4>
 			<p>
-				<code>define &lt;Szenario&gt; ROLLO_Automatik</code> 
-				<br /><br /> Define a ROLLO_Automatik szenario.<br />
+				<code>define &lt;Szenario&gt; ENERGYMANAGER</code> 
+				<br /><br /> Define a ENERGYMANAGER szenario.<br />
 			</p>
-			 <a name="ROLLO_automatik_Set"></a>
+			 <a name="ENERGYMANAGER_Set"></a>
 	 <h4>Set</h4>
 			<ul>
-				<li><a name="rollo_automatik_ein">
+				<li><a name="ENERGYMANAGER_ein">
 						<code>set &lt;Szenario&gt; ein</code></a><br />
 						enable this szenario</li>
-				<li><a name="rollo_automatik_aus">
+				<li><a name="ENERGYMANAGER_aus">
 						<code>set &lt;Szenario&gt; aus</code></a><br />
 						disable this szenario</li>		
-				<li><a name="rollo_automatik_pruefen">
+				<li><a name="ENERGYMANAGER_pruefen">
 						<code>set &lt;Szenario&gt; Prüfen</code></a><br />
 						check if all conditions are true and if, activate the szenario</li>						
-				<li><a name="rollo_automatik_aktivieren">
+				<li><a name="ENERGYMANAGER_aktivieren">
 						<code>set &lt;Szenario&gt; Aktivieren</code></a><br />
 						activate the szenario even if some conditions are false</li>						
 			</ul>
-			<a name="rollo_automatik_Attr"></a>
+			<a name="ENERGYMANAGER_Attr"></a>
 			<h4>Attributes</h4>
 			<ul>
-				<li><a name="rollo_automatik_rolladen-positionen"><code>attr &lt;Szenario&gt; rolladen-positionen RolladenName[,Rolladen2Name]:Position</code></a>
-					<br />set the positionto drive your shutter when szenario will be activated.<BR/>
-							Commaseparated list of your shutters, then seperated by : the position of your shutters</li>
-				<li><a name="rollo_automatik_Tage-aktiv"><code>attr &lt;Szenario&gt; Tage-aktiv	&lt;string&gt;</code></a>
+				<li><a name="ENERGYMANAGER_rolladen-positionen"><code>attr &lt;Szenario&gt; rolladen-positionen RolladenName[,Rolladen2Name]:Position</code></a>
+					<br />set the positionto drive your power sockets when szenario will be activated.<BR/>
+							Commaseparated list of your power socketss, then seperated by : the position of your power socketss</li>
+				<li><a name="ENERGYMANAGER_Tage-aktiv"><code>attr &lt;Szenario&gt; Tage-aktiv	&lt;string&gt;</code></a>
 					<br />The Name of the Days you want to activate the scenario, kommaseparated
           <BR/>allowed Names are: Montag,Dienstag,Mittwoch,Donnerstag,Freitag,Samstag,Sonntag,Feiertag</li>
-				<li><a name="rollo_automatik_Uhrzeit"><code>attr &lt;Szenario&gt; Uhrzeit	&lt;time&gt;</code></a>
+				<li><a name="ENERGYMANAGER_Uhrzeit"><code>attr &lt;Szenario&gt; Uhrzeit	&lt;time&gt;</code></a>
 					<br />set the Time for your Szenario to activate<BR/>
           Format is in 24h, examples: 6:14, 19:00. Variable Names with a comparable time string as state also allowed</li>
-				<li><a name="rollo_automatic-Bedingung"><code>attr &lt;Szenario&gt; Bedingung &lt;string&gt;</code></a>
+				<li><a name="ENERGY_automatic-Bedingung"><code>attr &lt;Szenario&gt; Bedingung &lt;string&gt;</code></a>
 					<br />additional conditions that must be true to activate the szenario</li>
 			</ul>
-      <a name="rollo_automatik_environment"></a>
+      <a name="ENERGYMANAGER_environment"></a>
       <h4>Environment</h4>
       <ul>
         <li>Kalender_Feiertage
@@ -458,7 +458,7 @@ sub setzeStartTimer($$) {
           <BR/>if value is equal to "ja" then the attribute "Tage-aktiv" is only valid if it is set to "Feiertag"
         </li>
         <li>Pennen
-          <BR/>if value is equal to "ja" every szenario bevor 10:00 clock are not activated
+          <BR/>if value is equal to "ja" every szenario bevor 0:00 clock are not activated
         </li>
       </ul>
 </ul>
