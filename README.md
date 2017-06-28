@@ -1,8 +1,8 @@
 Dies ist eine Erweiterung für die Haussteuerung [FHEM](http://www.fhem.de "FHEM") 
 
-Das Modul wird im fhem-wiki beschrieben: [http://www.fhemwiki.de/wiki/ROLLO](http://www.fhemwiki.de/wiki/ROLLO)
+Das Modul wird demnächst im fhem-wiki beschrieben: [http://www.fhemwiki.de/wiki/ROLLO](http://www.fhemwiki.de/wiki/erngymanager)
 
-Support gibt es in folgendem Forumthread ["Neues Modul: Rolladensteuerung"](https://forum.fhem.de/index.php/topic,47202.0.html )
+Support gibt es in folgendem Forumthread ["Neues Modul: Rolladensteuerung"](https://forum.fhem.de/index.php/topic,?????.0.html )
 
 ## Installation
 
