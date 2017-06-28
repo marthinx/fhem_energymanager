@@ -7,10 +7,9 @@ Support gibt es in folgendem Forumthread ["Neues Modul: Rolladensteuerung"](http
 ## Installation
 
 Auf Updates prüfen: 
-`https://raw.githubusercontent.com/RettungsTim/fhem-rollo/master/controls_fhemrollo.txt`
-
+`https://github.com/marthinx/fhem_energymanager/blob/master/controls_energymanager.txt`
 Auf die neueste Version updaten: 
-`update all https://raw.githubusercontent.com/RettungsTim/fhem-rollo/master/controls_fhemrollo.txt`
+`update all https://github.com/marthinx/fhem_energymanager/blob/master/controls_energymanager.txt`
 
 Zum regulären FHEM Updateprozess hinzufügen: 
-`update add https://raw.githubusercontent.com/RettungsTim/fhem-rollo/master/controls_fhemrollo.txt`
+`update add https://github.com/marthinx/fhem_energymanager/blob/master/controls_energymanager.txt`
