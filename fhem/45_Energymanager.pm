@@ -1,8 +1,8 @@
 ########################################################################################
-# $Id: 44_ROLLO_Automatik.pm 1202 2017-03-31 11:00:00Z                               $ #
-# Modul zur einfacheren Rolladensteuerung                                              #
+# $Id: 45_Energymanager 1202 2017-03-31 11:00:00Z                                    $ #
+# Modul um den Energiehaushalt zu managen                                              #
 #                                                                                      #
-# Thomas Ramm, 2016                                                                    #
+# Martin Schottmann, 2017                                                              #
 #                                                                                      #
 ########################################################################################
 #
@@ -44,7 +44,7 @@ my %gets = (
 # Die Funktion wird von Fhem.pl nach dem Laden des Moduls 
 # aufgerufen und bekommt einen Hash für das Modul als zentrale 
 # Datenstruktur übergeben.
-sub ROLLO_Automatik_Initialize($) {
+sub Energymanager_Initialize($) {
   my ($hash) = @_;
   my $name = $hash->{NAME};
   Log3 "global",4,"ROLLO_Automatik (?) >> Initialize";
@@ -66,7 +66,7 @@ sub ROLLO_Automatik_Initialize($) {
 # Die Define-Funktion eines Moduls wird von Fhem aufgerufen wenn 
 # der Define-Befehl für ein Geräte ausgeführt wird und das Modul 
 # bereits geladen und mit der Initialize-Funktion initialisiert ist
-sub ROLLO_Automatik_Define($$) {
+sub Energymanager_Define($$) {
   my ($hash,$def) = @_;
   my $name = $hash->{NAME};
   Log3 $name,5,"ROLLO_Automatik ($name) >> Define";
@@ -102,7 +102,7 @@ sub ROLLO_Automatik_Define($$) {
 # wird aufgerufen wenn ein Gerät mit delete gelöscht wird oder bei 
 # der Abarbeitung des Befehls rereadcfg, der ebenfalls alle Geräte 
 # löscht und danach das Konfigurationsfile neu abarbeitet.
-sub ROLLO_Automatik_Undef($) {
+sub Energymanager_Undef($) {
   my ($hash) = @_;
   my $name = $hash->{NAME};
   Log3 $name,5,"ROLLO_Automatik ($name) >> Undef";
@@ -111,7 +111,7 @@ sub ROLLO_Automatik_Undef($) {
 }
 
 #################################################################### SET #####
-sub ROLLO_Automatik_Set($@) {
+sub Energymanager_Set($@) {
   my ($hash,@a) = @_;
   my $name = $hash->{NAME};
   Log3 $name,5,"ROLLO_Automatik ($name) >> Set";
@@ -338,7 +338,7 @@ sub getUhrzeit($$)
 
 ################################################################### GET #####
 #
-sub ROLLO_Automatik_Get($@) {
+sub Energymanager_Get($@) {
   my ($hash, @a) = @_;
   my $name = $hash->{NAME};
 
@@ -358,7 +358,7 @@ sub ROLLO_Automatik_Get($@) {
 
 ################################################################## ATTR #####
 #
-sub ROLLO_Automatik_Attr(@) {
+sub Energymanager_Attr(@) {
   my ($cmd,$name,$aName,$aVal) = @_;
   Log3 $name,5,"ROLLO_Automatik ($name) >> Attr";  
   # $cmd can be "del" or "set"
@@ -392,7 +392,7 @@ sub setzeStartTimer($$) {
   my $befehl = "modify " . $at_name . " *" . $zeit;
   fhem($befehl);
 
-  Log3 $name,5,"ROLLO_Automatik ($name) << setzeStartTimer";
+  Log3 $name,5,"Energymanager ($name) << setzeStartTimer";
 }
 
 1;
